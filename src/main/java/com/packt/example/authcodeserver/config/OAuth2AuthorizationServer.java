@@ -21,7 +21,8 @@ public class OAuth2AuthorizationServer extends
             .withClient("clientapp")
             .secret("123456")
                 .redirectUris("http://localhost:9000/callback")
-                .authorizedGrantTypes("authorization_code")
+                .authorizedGrantTypes("implicit")
+                .accessTokenValiditySeconds(120)
                 .scopes("read_profile", "read_contacts");
         //@formatter:on
     }
