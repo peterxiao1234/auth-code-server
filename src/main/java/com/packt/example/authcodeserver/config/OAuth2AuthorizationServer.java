@@ -21,16 +21,25 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 @EnableAuthorizationServer
 public class OAuth2AuthorizationServer extends
         AuthorizationServerConfigurerAdapter {
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer
+                                  endpoints) throws Exception {
+        endpoints.authenticationManager(authenticationManager);
+    }
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients)
             throws Exception {
         clients.inMemory()
-                .withClient("clientadmin")
-                .secret("123")
-                .authorizedGrantTypes("client_credentials")
-                .scopes("admin");
+                .withClient("clientapp")
+                .secret("123456")
+                .authorizedGrantTypes(
+                        "authorization_code",
+                        "password", "refresh_token")
+                .accessTokenValiditySeconds(320)
+                .refreshTokenValiditySeconds(3000)
+                .scopes("read_profile", "read_contacts");
     }
-
-
 }
