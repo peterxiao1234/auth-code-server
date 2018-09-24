@@ -1,11 +1,13 @@
 package com.packt.example.authcodeserver.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +21,7 @@ import org.springframework.security.oauth2.provider.approval.ApprovalStore;
 import org.springframework.security.oauth2.provider.approval.JdbcApprovalStore;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 import javax.sql.DataSource;
 
@@ -31,36 +34,32 @@ import javax.sql.DataSource;
 public class OAuth2AuthorizationServer extends
         AuthorizationServerConfigurerAdapter {
     @Autowired
-    private DataSource dataSource;
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private RedisConnectionFactory connectionFactory;
     @Override
-    public void configure(ClientDetailsServiceConfigurer clients)
+    public void configure(
+		AuthorizationServerEndpointsConfigurer endpoints)
             throws Exception {
-        clients.jdbc(dataSource);
+        endpoints
+                .authenticationManager(authenticationManager)
+                .tokenStore(tokenStore());
     }
     @Bean
     public TokenStore tokenStore() {
-        return new JdbcTokenStore(dataSource);
-    }
-    @Bean
-    public ApprovalStore approvalStore() {
-        return new JdbcApprovalStore(dataSource);
-    }
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(4);
+        RedisTokenStore redis = new RedisTokenStore(connectionFactory);
+        return redis;
     }
     @Override
-    public void configure(AuthorizationServerEndpointsConfigurer
-                                  endpoints)
+    public void configure(ClientDetailsServiceConfigurer clients)
             throws Exception {
-        endpoints
-                .approvalStore(approvalStore())
-                .tokenStore(tokenStore());
+        clients.inMemory()
+                .withClient("clientapp").secret("123456")
+                .authorizedGrantTypes("password", "authorization_code")
+                .scopes("read_profile", "read_contacts");
     }
-    @Override
-    public void configure(AuthorizationServerSecurityConfigurer
-                                  security)
-            throws Exception {
-        security.passwordEncoder(passwordEncoder());
-    }
+
+
+
 }
