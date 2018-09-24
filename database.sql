@@ -6,6 +6,7 @@ GRANT ALL PRIVILEGES ON oauth2provider.* TO 'oauth2provider'@'localhost';
 -- access the recently created database oauth2provider
 use oauth2provider;
 
+select * from oauth_client_details
 -- create needed structure for oauth provider
 create table oauth_client_details (
   client_id VARCHAR(256) PRIMARY KEY,
